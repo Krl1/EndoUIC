@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  endouic:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: endouic_env
+    shm_size: '2gb'
+    volumes:
+      - .:/home/kkulawiec/Documents/low-light-image-enhancement/externals/EndoUIC
+      - ../../datasets/cec_dataset_only_dim:/home/kkulawiec/Documents/low-light-image-enhancement/datasets/cec_dataset_only_dim
+      - /media/8TB_hdd/HOME/kkulawiec/low-light-image-enhancement/externals/EndoUIC:/home/kkulawiec/Documents/low-light-image-enhancement/externals/EndoUIC/EndoUIC/experiments
+    working_dir: /home/kkulawiec/Documents/low-light-image-enhancement/externals/EndoUIC/EndoUIC
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['${GPU_ID:-0}']
+              capabilities: [gpu]
+    environment:
+      - PYTHONPATH=/home/kkulawiec/Documents/low-light-image-enhancement/externals/EndoUIC/EndoUIC
+      - CUDA_VISIBLE_DEVICES=0  # Wewnątrz kontenera zawsze widoczna jako 0
+    stdin_open: true
+    tty: true

@@ -1,0 +1,4 @@
+**/__pycache__
+**/tb_logger
+**/*.log
+experiments/train_archived*
