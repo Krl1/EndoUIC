@@ -2,3 +2,4 @@
 **/tb_logger
 **/*.log
 experiments/train_archived*
+BasicSR-light/BasicSR/
