@@ -1,0 +1,15 @@
+.git
+.gitignore
+.dockerignore
+**/experiments
+**/results
+**/pretrained_models
+**/dataset
+**/datasets
+**/*.pth
+**/*.pyc
+**/__pycache__
+docker-compose.yml.*
+Dockerfile.old
+Dockerfile.clean
+*.ipynb

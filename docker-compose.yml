@@ -5,13 +5,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: endouic_env
-    shm_size: '2gb'
-    volumes:
-      - .:/home/kkulawiec/Documents/low-light-image-enhancement/externals/EndoUIC
-      - ../../datasets/cec_dataset_only_dim:/home/kkulawiec/Documents/low-light-image-enhancement/datasets/cec_dataset_only_dim
-      - /media/8TB_hdd/HOME/kkulawiec/low-light-image-enhancement/externals/EndoUIC:/home/kkulawiec/Documents/low-light-image-enhancement/externals/EndoUIC/EndoUIC/experiments
-    working_dir: /home/kkulawiec/Documents/low-light-image-enhancement/externals/EndoUIC/EndoUIC
+    container_name: endouic_rtx3080
+    shm_size: '8gb'
+    tty: true
+    stdin_open: true
     deploy:
       resources:
         reservations:
@@ -19,8 +16,12 @@ services:
             - driver: nvidia
               device_ids: ['${GPU_ID:-0}']
               capabilities: [gpu]
+    volumes:
+      - ${DATASET_PATH:-/home/kkulawiec/Documents/low-light-image-enhancement/datasets/cec_dataset_only_dim}:/home/kkulawiec/Documents/low-light-image-enhancement/datasets/cec_dataset_only_dim:ro
+      - ./experiments:/app/EndoUIC/experiments
     environment:
-      - PYTHONPATH=/home/kkulawiec/Documents/low-light-image-enhancement/externals/EndoUIC/EndoUIC
-      - CUDA_VISIBLE_DEVICES=0  # Wewnątrz kontenera zawsze widoczna jako 0
-    stdin_open: true
-    tty: true
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONPATH=/app/EndoUIC
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+    working_dir: /app/EndoUIC
+    command: /bin/bash
