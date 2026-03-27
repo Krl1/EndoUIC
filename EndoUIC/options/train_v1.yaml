@@ -13,7 +13,7 @@ datasets:
     input_root: "/home/kkulawiec/Documents/low-light-image-enhancement/datasets/cec_dataset_only_dim/train/corrupted"
     csv_path: "/home/kkulawiec/Documents/low-light-image-enhancement/datasets/cec_dataset_only_dim/train.csv"
     input_mode: crop
-    crop_size: [192, 288]
+    crop_size: [128, 192]
     concat_with_position_encoding: true
     concat_with_hiseq: true
     hiseq_random_cat: true
@@ -26,8 +26,8 @@ datasets:
 
     # data loader
     use_shuffle: true
-    num_worker_per_gpu: 4
-    batch_size_per_gpu: 4
+    num_worker_per_gpu: 3
+    batch_size_per_gpu: 1
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
@@ -86,6 +86,7 @@ path:
 
 # training settings
 train:
+  accum_grad: 4
   cs_on_shift: true
   vis_train: true
   vis_num: 150
@@ -144,6 +145,9 @@ logger:
   use_tb_logger: true
   wandb:
     project: ~
+    resume_id: ~
+  wandb_cache:
+    project: endouic-training
     resume_id: ~
 
 # dist training settings

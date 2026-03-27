@@ -214,6 +214,8 @@ def train_pipeline(root_path):
             model.validation(val_loader, current_iter, tb_logger, opt['val']['save_img'])
     if tb_logger:
         tb_logger.close()
+    if hasattr(model, 'finalize_logging'):
+        model.finalize_logging('success')
 
 
 if __name__ == '__main__':

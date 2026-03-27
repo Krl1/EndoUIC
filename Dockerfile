@@ -37,8 +37,9 @@ RUN pip install \
     torchvision==0.17.0 \
     --index-url https://download.pytorch.org/whl/cu121
 
-RUN pip install ninja packaging einops timm "numpy>=1.21,<2.0"
+RUN pip install ninja packaging einops timm "numpy>=1.21,<2.0" pandas wandb pytorch-lightning lightning-fabric
 
+RUN pip install "transformers<4.39"
 RUN pip install causal-conv1d==1.2.0.post2 --no-build-isolation
 RUN pip install mamba-ssm==1.2.0.post1 --no-build-isolation
 
@@ -47,7 +48,7 @@ WORKDIR /app
 COPY BasicSR-light /app/BasicSR-light
 COPY EndoUIC /app/EndoUIC
 
-RUN grep -v "^numpy" /app/EndoUIC/requirements.txt > /tmp/req_endouic.txt \
+RUN grep -v "^numpy" /app/EndoUIC/requirements.txt | grep -v "^basicsr" > /tmp/req_endouic.txt \
  && pip install -r /tmp/req_endouic.txt
 
 RUN grep -v "^numpy" /app/BasicSR-light/requirements.txt > /tmp/req_basicsr.txt \

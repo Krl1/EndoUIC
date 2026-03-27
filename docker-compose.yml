@@ -19,9 +19,10 @@ services:
     volumes:
       - ${DATASET_PATH:-/home/kkulawiec/Documents/low-light-image-enhancement/datasets/cec_dataset_only_dim}:/home/kkulawiec/Documents/low-light-image-enhancement/datasets/cec_dataset_only_dim:ro
       - ./experiments:/app/EndoUIC/experiments
+      - ../LLCaps/utils:/app/llcaps_utils:ro
     environment:
       - CUDA_VISIBLE_DEVICES=0
-      - PYTHONPATH=/app/EndoUIC
+      - PYTHONPATH=/app/EndoUIC:/app/llcaps_utils
       - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
     working_dir: /app/EndoUIC
     command: /bin/bash

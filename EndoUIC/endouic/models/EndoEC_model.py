@@ -64,6 +64,22 @@ class EndoUICModel(BaseModel):
 
 
 
+        self._wandb_logger = None
+        wandb_opt = self.opt.get('logger', {}).get('wandb_cache', {})
+        if wandb_opt.get('project') and self.opt.get('rank', 0) == 0:
+            try:
+                from wandb_logger import WandbLoggerWithCache
+                self._wandb_logger = WandbLoggerWithCache(
+                    name=self.opt['name'],
+                    project=wandb_opt['project'],
+                    save_dir=self.opt['path']['experiments_root'],
+                    id=wandb_opt.get('resume_id'),
+                )
+                self._wandb_logger.log_hyperparams(self.opt)
+                get_root_logger().info(f'WandbLoggerWithCache initialized, project={wandb_opt["project"]}')
+            except ImportError:
+                get_root_logger().warning('wandb_logger not found, wandb logging disabled')
+
         if self.is_train:
             self.init_training_settings()
 
@@ -109,8 +125,13 @@ class EndoUICModel(BaseModel):
     def optimize_parameters(self, current_iter):
         # optimize net_g
         assert 'ddpm_cs' in self.opt['train'].get('train_type', None), "train_type must be ddpm_cs"
-        self.optimizer_g.zero_grad()
-        pred_noise, noise, x_recon_cs, x_start, t, color_scale = self.ddpm(self.HR, self.LR, 
+        accum_steps = self.opt['train'].get('accum_grad', 1)
+        is_first_accum = (current_iter - 1) % accum_steps == 0
+        is_last_accum = current_iter % accum_steps == 0
+
+        if is_first_accum:
+            self.optimizer_g.zero_grad()
+        pred_noise, noise, x_recon_cs, x_start, t, color_scale = self.ddpm(self.HR, self.LR,
                   train_type=self.opt['train'].get('train_type', None),
                   different_t_in_one_batch=self.opt['train'].get('different_t_in_one_batch', None),
                   t_sample_type=self.opt['train'].get('t_sample_type', None),
@@ -134,7 +155,7 @@ class EndoUICModel(BaseModel):
         if self.opt['train'].get('vis_train', False) and current_iter <= self.opt['train'].get('vis_num', 100) and \
             self.opt['rank'] == 0:
             '''
-            When the parameter 'vis_train' is set to True, the training process will be visualized. 
+            When the parameter 'vis_train' is set to True, the training process will be visualized.
             The value of 'vis_num' corresponds to the number of visualizations to be generated.
             '''
             save_img_path = osp.join(self.opt['path']['visualization'], 'train',
@@ -161,8 +182,13 @@ class EndoUICModel(BaseModel):
             loss_dict['l_g_noise'] = l_g_noise
             l_g_total += l_g_noise
 
-        l_g_total.backward()
-        self.optimizer_g.step()
+        (l_g_total / accum_steps).backward()
+        if is_last_accum:
+            self.optimizer_g.step()
+            if self._wandb_logger is not None:
+                self._wandb_logger.log_metrics(
+                    {k: v.item() for k, v in loss_dict.items()},
+                    step=current_iter)
         self.log_dict = self.reduce_loss_dict(loss_dict)
 
     def test(self):
@@ -390,6 +416,10 @@ class EndoUICModel(BaseModel):
         if tb_logger:
             for metric, value in self.metric_results.items():
                 tb_logger.add_scalar(f'metrics/{metric}', value, current_iter)
+        if self._wandb_logger is not None:
+            self._wandb_logger.log_metrics(
+                {f'val/{metric}': value for metric, value in self.metric_results.items()},
+                step=current_iter)
 
     def get_current_visuals(self):
         out_dict = OrderedDict()
@@ -403,3 +433,7 @@ class EndoUICModel(BaseModel):
 
     def save(self, epoch, current_iter):
         self.save_network([self.ddpm], 'net_g', current_iter, param_key=['params'])
+
+    def finalize_logging(self, status='success'):
+        if self._wandb_logger is not None:
+            self._wandb_logger.finalize(status)
