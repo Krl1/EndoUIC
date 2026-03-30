@@ -3,3 +3,4 @@
 **/*.log
 experiments/train_archived*
 BasicSR-light/BasicSR/
+experiments/

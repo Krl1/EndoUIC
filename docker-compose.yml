@@ -18,7 +18,9 @@ services:
               capabilities: [gpu]
     volumes:
       - ${DATASET_PATH:-/home/kkulawiec/Documents/low-light-image-enhancement/datasets/cec_dataset_only_dim}:/home/kkulawiec/Documents/low-light-image-enhancement/datasets/cec_dataset_only_dim:ro
-      - ./experiments:/app/EndoUIC/experiments
+      - ./experiments:/app/experiments
+      - ./EndoUIC/options:/app/EndoUIC/options
+      - /media/8TB_hdd/HOME/kkulawiec/low-light-image-enhancement/externals/EndoUIC/models/models:/app/experiments/train/models
       - ../LLCaps/utils:/app/llcaps_utils:ro
     environment:
       - CUDA_VISIBLE_DEVICES=0
